@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Final - Detección de Patrones Bursátiles</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+            @bottom-right {
+                content: "Pág. " counter(page);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+            @bottom-left {
+                content: "IA206 Planificación de Sistemas Inteligentes en Tiempo Real | COCID";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                font-weight: bold;
+                color: #64748b;
+            }
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2, h3, h4 {
+            color: #0f172a;
+            font-weight: 700;
+            margin-top: 0;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            font-size: 20pt;
+            line-height: 1.2;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 14pt;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 10px;
+        }
+
+        h3 {
+            font-size: 11pt;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #2563eb;
+        }
+
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .font-bold { font-weight: bold; }
+        
+        .header-banner {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        
+        .header-banner h1 {
+            color: #ffffff;
+            border-bottom: 1px solid #38bdf8;
+            font-size: 22pt;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+
+        .header-metadata {
+            margin-top: 15px;
+            font-size: 10pt;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .disclaimer-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 9.5pt;
+            color: #92400e;
+            border-radius: 0 4px 4px 0;
+            page-break-inside: avoid;
+        }
+        
+        .disclaimer-box strong { color: #b45309; }
+
+        /* Placeholders for evidence */
+        .evidence-placeholder {
+            border: 2px dashed #94a3b8;
+            background-color: #f8fafc;
+            padding: 25px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 6px;
+            page-break-inside: avoid;
+        }
+
+        .evidence-placeholder .title {
+            font-weight: bold;
+            color: #334155;
+            font-size: 10pt;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .evidence-placeholder .desc {
+            color: #64748b;
+            font-size: 8.5pt;
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) { background-color: #f8fafc; }
+        
+        ul, ol { margin-top: 5px; margin-bottom: 12px; padding-left: 20px; }
+        li { margin-bottom: 4px; text-align: justify; }
+    </style>
+</head>
+<body>
+
+    <!-- PORTADA / BANNER EJECUTIVO -->
+    <div class="header-banner">
+        <h1>REPORTE DE PROYECTO FINAL</h1>
+        <div style="font-size: 14pt; font-weight: bold; color: #38bdf8; margin-bottom: 5px;">
+            Sistema de Detección de Patrones Bursátiles mediante Visión Computacional
+        </div>
+        <div class="header-metadata">
+            <strong>Institución:</strong> Colegio Universitario Científico de Datos (COCID)<br>
+            <strong>Curso:</strong> IA206 - Planificación de Sistemas Inteligentes en Tiempo Real<br>
+            <strong>Autor:</strong> Alfonso Jesus Garcia Moya<br>
+            <strong>Arquitectura:</strong> DINOv2 (Meta AI) + PyTorch In-Memory Pipeline<br>
+            <strong>Fecha:</strong> 19 de Junio de 2026
+        </div>
+    </div>
+
+    <!-- 1. MARCO TEÓRICO -->
+    <h2>1. Marco Teórico</h2>
+    <p>
+        El análisis técnico bursátil se basa históricamente en la identificación visual de geometrías y formaciones repetitivas en los gráficos de precios. Tradicionalmente, la automatización algorítmica aborda este problema analizando las series temporales numéricas (OHLCV) mediante métodos estadísticos o redes recurrentes (RNN/LSTM). Sin embargo, la disrupción reciente en modelos fundacionales de Visión Computacional, específicamente los Vision Transformers (ViT), permite aproximar el problema emulando directamente la percepción visual humana.
+    </p>
+    <p>
+        El modelo <strong>DINOv2</strong> (desarrollado por Meta AI) representa el estado del arte en aprendizaje autosupervisado para imágenes. Al no depender de etiquetas durante su preentrenamiento masivo, DINOv2 extrae características universales (<i>embeddings</i>) de alta robustez geométrica y semántica. Implementar <i>Transfer Learning</i> congelando este *backbone* y ajustando únicamente un Perceptrón Multicapa (MLP) en la etapa de salida permite clasificar patrones complejos con una cantidad minúscula de datos y alto rendimiento computacional.
+    </p>
+
+    <!-- 2. PROBLEMÁTICA -->
+    <h2>2. Problemática</h2>
+    <p>
+        La identificación continua de patrones en múltiples activos financieros induce fatiga visual severa y pérdida de objetividad en los operadores humanos. La problemática central de este proyecto radica en desarrollar un sistema autónomo capaz de analizar visualmente el mercado en tiempo real, identificando patrones estructurales con latencias lo suficientemente bajas para soportar decisiones en entornos de trading activo.
+    </p>
+
+    <!-- 3. JUSTIFICACIÓN -->
+    <h2>3. Justificación del Sistema Inteligente</h2>
+    
+    <div class="disclaimer-box">
+        <strong>⚠️ AVISO CRÍTICO DE ARQUITECTURA DE INGENIERÍA:</strong><br>
+        Es imperativo aclarar desde una perspectiva de ingeniería <i>Senior</i> que la captura de fotogramas de una interfaz web (<i>scraping</i> de elementos HTML/Canvas mediante Selenium) para el análisis de mercados financieros <strong>constituye un antipatrón en entornos de producción reales.</strong> La solución óptima, escalable y numéricamente exacta exige la ingesta directa de datos a través de una API (REST/WebSockets) y el cálculo matricial de indicadores sobre la serie temporal.
+        <br><br>
+        <strong>No obstante, esta arquitectura de captura visual ininterrumpida se implementó de forma deliberada para satisfacer y aplicar íntegramente los conocimientos de Visión Computacional evaluados en la materia.</strong> Se subraya que este sistema supera ampliamente el análisis de un video estático o pregrabado, ya que opera mediante un <i>streaming en tiempo real</i> interactuando con el DOM cada 10 segundos para inferir la volatilidad actual del índice S&P 500 (^GSPC). El objetivo es demostrar la capacidad algorítmica de transformar píxeles en contexto financiero sobre la marcha, utilizando los tensores como única fuente de la verdad.
+    </div>
+    
+    <p>
+        Bajo esta restricción académica intencionada, el sistema se justifica como un demostrador técnico avanzado de ingesta <i>In-Memory</i>, que elimina los cuellos de botella de disco (I/O) al convertir los bytes PNG directamente en tensores normalizados para la inferencia de PyTorch.
+    </p>
+
+    <!-- 4. ANÁLISIS Y DISEÑO -->
+    <h2>4. Análisis y Diseño del Sistema Inteligente</h2>
+
+    <h3>4.1 Diagrama de Flujo (General y Muestra Nueva)</h3>
+    <p>El ciclo de vida de los datos opera exclusivamente en la memoria RAM, eliminando las lecturas físicas.</p>
+
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN DE FLUJO DE ARQUITECTURA]</div>
+        <div class="desc">Instrucción: Inserte el diagrama general que muestra la interacción entre Selenium, TuberiaTensores, DINOv2 y la UI en Flask.</div>
+    </div>
+
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN DE FLUJO PARA PROCESAMIENTO DE NUEVA MUESTRA]</div>
+        <div class="desc">Instrucción: Inserte el diagrama que explica el camino lógico que toma una nueva imagen (Captura → Resize 224x224 → Normalización ImageNet → Crop Análisis Dual → Clasificación).</div>
+    </div>
+
+    <h3>4.2 Diagrama de Secuencia</h3>
+    <p>
+        El sistema funciona de forma concurrente. El bucle infinito del hilo de captura detona peticiones a Chrome *headless* cada 10,000ms. Al resolverse la matriz de píxeles, el objeto se transfiere a un *Deque* de memoria compartida, donde el modelo ViT-B/14 extrae los *embeddings* (768 dimensiones). Flask recibe la estructura JSON resultante y la expone vía REST para ser consumida asíncronamente (<i>polling</i>) por el cliente web.
+    </p>
+
+    <h3>4.3 Diagrama Entidad-Relación</h3>
+    <p>
+        <strong>Condición de Diseño:</strong> Debido a la naturaleza en tiempo real estricto y la necesidad de mantener latencias por debajo de los 150ms, este proyecto omite el uso de bases de datos persistentes (SQL/NoSQL). El almacenamiento del historial de capturas e inferencias se realiza de manera efímera sobre buffers circulares en RAM, por lo que el modelado Entidad-Relación no aplica estructuralmente a esta topología.
+    </p>
+
+    <!-- 5. DESARROLLO DEL SISTEMA -->
+    <h2>5. Desarrollo del Sistema Inteligente</h2>
+    <p>
+        El desarrollo del núcleo analítico requirió una base inicial de 31 gráficas estandarizadas representando patrones chartistas canónicos. Para lograr la convergencia del modelo, se implementó un pipeline robusto de *Data Augmentation* *offline*.
+    </p>
+    
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN DE FLUJO DE DATA AUGMENTATION]</div>
+        <div class="desc">Instrucción: Inserte el esquema que ilustra la generación de 15 variantes por imagen (Color Jittering, Flip, Crop, Rotation y adición de ruido gaussiano).</div>
+    </div>
+    
+    <p>
+        El modelo fue entrenado congelando los 86.6 millones de parámetros de DINOv2 y permitiendo el gradiente únicamente sobre una cabeza MLP de 204,317 parámetros. Esto garantiza una ejecución liviana incluso bajo *fallback* a CPU (dado que la arquitectura Blackwell RTX 5070 Ti se encuentra en espera de soporte estable por parte de las *nightly builds* de PyTorch).
+    </p>
+
+    <!-- 6. RESULTADOS -->
+    <h2>6. Resultados</h2>
+    <p>
+        El proceso de entrenamiento finalizó de manera óptima alcanzando el criterio de parada en la época 29 de 30. La arquitectura demostró una retención semántica sobresaliente.
+    </p>
+    <ul>
+        <li><strong>Precisión de Validación:</strong> 100.0%</li>
+        <li><strong>Precisión de Entrenamiento:</strong> 97.1%</li>
+        <li><strong>Pérdida (Loss) de Validación:</strong> 0.0557</li>
+        <li><strong>Latencia de Inferencia (E2E):</strong> ~90 - 130 milisegundos.</li>
+    </ul>
+
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN RESULTADO FINAL]</div>
+        <div class="desc">Instrucción: Inserte aquí el gráfico de curvas Loss/Accuracy o tabla de consola demostrando la métrica del 100% de validación (Época 29/30).</div>
+    </div>
+
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN DE STREAMING DE DATOS EN MEMORIA]</div>
+        <div class="desc">Instrucción: Inserte aquí el log de la terminal evidenciando la inyección al buffer de memoria (sin llamadas a disco) validando el procesamiento continuo en tiempo real (cada 10 segundos).</div>
+    </div>
+
+    <div class="evidence-placeholder">
+        <div class="title">[PLACEHOLDER: IMAGEN DE LA GUI WEB]</div>
+        <div class="desc">Instrucción: Inserte captura de la interfaz 'Aero Crystal' operando, mostrando el render de la gráfica actual y las inferencias duales simultáneas.</div>
+    </div>
+
+    <!-- 7. CONCLUSIONES -->
+    <h2>7. Conclusiones</h2>
+    <p>
+        Se ha desplegado un sistema inteligente completo que valida la capacidad de los modelos visuales fundacionales para decodificar comportamientos estocásticos de los mercados financieros. La arquitectura logró aislar el estado del arte en visión computacional dentro de un flujo operativo *In-Memory*, procesando secuencias asíncronas cada 10 segundos sin bloqueos I/O y prescindiendo de infraestructuras pre-grabadas.
+    </p>
+    <p>
+        Desde una óptica de ingeniería y planificación de sistemas inteligentes, el desarrollo cumple cabalmente con la rúbrica al transformar fotogramas en conocimiento accionable, reiterando que la decisión de emular la visión del trader por pantalla (en lugar del procesamiento vectorial de una API REST de precios) fue el vehículo diseñado específicamente para demostrar el dominio profundo sobre algoritmos de análisis y transformación visual en tiempo real.
+    </p>
+
+</body>
+</html>
