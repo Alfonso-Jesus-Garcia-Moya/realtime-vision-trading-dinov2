@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PatternDetect — Terminal Aero Crystal</title>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --aero-bg: rgba(220, 235, 255, 0.12);
+            --aero-border: rgba(255, 255, 255, 0.35);
+            --aero-shine: rgba(255, 255, 255, 0.15);
+            --aero-blur: 28px;
+            --aero-inner: rgba(255, 255, 255, 0.06);
+            --text-primary: #f0f6ff;
+            --text-secondary: #b8d0f0;
+            --text-dim: #6080a8;
+            --cyan: #00d4ff;
+            --green: #00ff88;
+            --red: #ff3860;
+            --yellow: #ffc800;
+            --purple: #b080ff;
+            --pink: #ff6bcb;
+            --gap: 5px;
+            --font-mono: 'Cascadia Code', 'Consolas', 'SF Mono', monospace;
+            --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        html, body { height:100%; overflow:hidden; }
+        body {
+            font-family: var(--font-ui);
+            color: var(--text-primary);
+            background: #0a1628;
+        }
+
+        /* ═══ FONDO AURORA VIVIDO ═══ */
+        .fondo-aurora {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 120% 80% at 20% 20%, rgba(0,100,255,0.35), transparent 60%),
+                radial-gradient(ellipse 100% 100% at 80% 10%, rgba(120,0,255,0.25), transparent 55%),
+                radial-gradient(ellipse 90% 70% at 60% 80%, rgba(0,255,160,0.2), transparent 55%),
+                radial-gradient(ellipse 70% 90% at 10% 70%, rgba(255,50,180,0.15), transparent 55%),
+                linear-gradient(180deg, #060e1f 0%, #0d1b35 40%, #0a1225 100%);
+            animation: aurora-movimiento 25s ease-in-out infinite alternate;
+        }
+        @keyframes aurora-movimiento {
+            0%   { filter: hue-rotate(0deg) brightness(1); }
+            33%  { filter: hue-rotate(15deg) brightness(1.1); }
+            66%  { filter: hue-rotate(-10deg) brightness(0.95); }
+            100% { filter: hue-rotate(5deg) brightness(1.05); }
+        }
+
+        /* ═══ PARTÍCULAS DE LUZ (pseudo) ═══ */
+        .fondo-aurora::after {
+            content:'';
+            position:absolute; inset:0;
+            background-image:
+                radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 30% 45%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1.5px 1.5px at 55% 25%, rgba(0,200,255,0.5), transparent),
+                radial-gradient(1px 1px at 75% 60%, rgba(255,255,255,0.35), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(180,128,255,0.4), transparent),
+                radial-gradient(1.5px 1.5px at 45% 75%, rgba(0,255,136,0.4), transparent),
+                radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.25), transparent),
+                radial-gradient(1px 1px at 65% 10%, rgba(255,255,255,0.3), transparent);
+            animation: particulas-flotar 40s linear infinite;
+        }
+        @keyframes particulas-flotar {
+            0%   { transform: translateY(0); }
+            100% { transform: translateY(-30px); }
+        }
+
+        /* ═══ CAPA CRISTAL GLOBAL ═══ */
+        .capa-cristal {
+            position:fixed; inset:0; z-index:1;
+            background: rgba(10,18,40,0.25);
+            backdrop-filter: blur(2px) saturate(1.3);
+        }
+
+        /* ═══ PANEL AERO GLASS ═══ */
+        .ag {
+            background: var(--aero-bg);
+            backdrop-filter: blur(var(--aero-blur)) saturate(1.8) brightness(1.1);
+            -webkit-backdrop-filter: blur(var(--aero-blur)) saturate(1.8) brightness(1.1);
+            border: 1px solid var(--aero-border);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.25),
+                inset 0 -1px 0 rgba(255,255,255,0.05),
+                inset 1px 0 0 rgba(255,255,255,0.12),
+                inset -1px 0 0 rgba(255,255,255,0.08),
+                0 8px 32px rgba(0,0,0,0.3),
+                0 2px 8px rgba(0,100,255,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+        .ag:hover {
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(255,255,255,0.08),
+                inset 1px 0 0 rgba(255,255,255,0.15),
+                inset -1px 0 0 rgba(255,255,255,0.1),
+                0 12px 40px rgba(0,0,0,0.35),
+                0 4px 16px rgba(0,120,255,0.15);
+        }
+        /* Brillo superior (Aero shine line) */
+        .ag::before {
+            content:'';
+            position:absolute; top:0; left:0; right:0; height:50%;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.18) 0%,
+                rgba(255,255,255,0.06) 40%,
+                transparent 100%);
+            border-radius: 7px 7px 0 0;
+            pointer-events:none; z-index:3;
+        }
+        /* Reflejo animado diagonal */
+        .ag::after {
+            content:'';
+            position:absolute; top:-100%; left:-100%;
+            width:300%; height:300%;
+            background: linear-gradient(
+                135deg,
+                transparent 40%,
+                rgba(255,255,255,0.06) 45%,
+                rgba(255,255,255,0.12) 50%,
+                rgba(255,255,255,0.06) 55%,
+                transparent 60%
+            );
+            animation: brillo-diagonal 8s ease-in-out infinite;
+            pointer-events:none; z-index:4;
+        }
+        @keyframes brillo-diagonal {
+            0%   { transform: translateX(-30%) translateY(-30%); }
+            50%  { transform: translateX(30%) translateY(30%); }
+            100% { transform: translateX(-30%) translateY(-30%); }
+        }
+
+        /* ═══ ENCABEZADO PANEL ═══ */
+        .enc {
+            display:flex; align-items:center; gap:8px;
+            padding:8px 14px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            font-size:10.5px; font-weight:700;
+            text-transform:uppercase; letter-spacing:1.5px;
+            color: var(--text-secondary);
+            position:relative; z-index:5;
+            user-select:none;
+        }
+        .enc .ic { font-size:14px; }
+        .led {
+            width:8px; height:8px; border-radius:50%;
+            background: var(--green);
+            display:inline-block;
+            animation: pulso-led 2s ease-in-out infinite;
+            margin-left:auto;
+            box-shadow: 0 0 8px rgba(0,255,136,0.6), 0 0 20px rgba(0,255,136,0.2);
+        }
+        @keyframes pulso-led { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
+        .led.off { background:var(--red); animation:none; box-shadow:0 0 8px rgba(255,50,96,0.6); }
+
+        /* ═══ GRID PRINCIPAL ═══ */
+        .terminal {
+            position:relative; z-index:2;
+            display:grid;
+            grid-template-columns: 1fr 420px;
+            grid-template-rows: 54px 1fr 220px;
+            gap: var(--gap);
+            padding: var(--gap);
+            height:100vh; width:100vw;
+        }
+
+        /* ═══ BARRA SUPERIOR ═══ */
+        .barra {
+            grid-column: 1 / -1;
+            display:flex; align-items:center; gap:12px;
+            padding:0 16px;
+        }
+        .logo {
+            font-size:15px; font-weight:900;
+            letter-spacing:3px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple), var(--pink));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            background-clip:text;
+            white-space:nowrap;
+            filter: drop-shadow(0 0 8px rgba(0,212,255,0.3));
+        }
+        .logo sub { font-size:8px; font-weight:400; -webkit-text-fill-color: var(--text-dim); }
+
+        .grupo-url { flex:1; display:flex; height:36px; }
+        .inp-url {
+            flex:1; height:100%;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-right:none; border-radius:6px 0 0 6px;
+            color: var(--text-primary);
+            font-family: var(--font-mono); font-size:12px;
+            padding:0 14px; outline:none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .inp-url:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 16px rgba(0,212,255,0.2);
+        }
+        .inp-url::placeholder { color: var(--text-dim); }
+        .btn-ir {
+            height:100%; padding:0 18px;
+            background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(176,128,255,0.2));
+            border: 1px solid rgba(0,212,255,0.4);
+            border-radius:0 6px 6px 0;
+            color:var(--cyan); font-size:11px; font-weight:700;
+            letter-spacing:1.5px; cursor:pointer;
+            transition:all 0.2s;
+        }
+        .btn-ir:hover { background:rgba(0,212,255,0.3); box-shadow:0 0 20px rgba(0,212,255,0.25); }
+        .btn-ir.cargando { opacity:0.4; pointer-events:none; }
+
+        /* ═══ BOTÓN REINICIAR TODO ═══ */
+        .btn-reiniciar {
+            height:36px; padding:0 16px; margin-left:6px;
+            background: linear-gradient(135deg, rgba(255,56,96,0.15), rgba(255,107,203,0.15));
+            border: 1px solid rgba(255,56,96,0.5);
+            border-radius:6px;
+            color: var(--pink); font-size:10px; font-weight:800;
+            letter-spacing:1px; cursor:pointer;
+            transition:all 0.25s; white-space:nowrap;
+            position:relative; overflow:hidden;
+        }
+        .btn-reiniciar:hover {
+            background: linear-gradient(135deg, rgba(255,56,96,0.3), rgba(255,107,203,0.3));
+            box-shadow: 0 0 24px rgba(255,107,203,0.3);
+            transform: scale(1.02);
+        }
+        .btn-reiniciar.activo {
+            animation: pulso-reinicio 1.5s ease-in-out infinite;
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+        @keyframes pulso-reinicio {
+            0%,100% { box-shadow: 0 0 8px rgba(255,200,0,0.3); }
+            50% { box-shadow: 0 0 24px rgba(255,200,0,0.6); }
+        }
+        /* Brillo del botón */
+        .btn-reiniciar::before {
+            content:'';
+            position:absolute; top:0; left:-100%; width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+        .btn-reiniciar:hover::before { left:100%; }
+
+        .stats {
+            display:flex; gap:14px;
+            font-size:10.5px; font-family:var(--font-mono);
+            white-space:nowrap;
+        }
+        .st { color:var(--text-dim); }
+        .st b { font-weight:700; }
+        .st b.c { color:var(--cyan); }
+        .st b.g { color:var(--green); }
+        .st b.r { color:var(--red); }
+
+        /* ═══ PANEL CHART ═══ */
+        .chart { display:flex; flex-direction:column; }
+        .chart-body {
+            flex:1; display:flex; align-items:center; justify-content:center;
+            padding:6px; min-height:0; overflow:hidden;
+            position:relative; z-index:5;
+        }
+        .chart-body img {
+            max-width:100%; max-height:100%; object-fit:contain;
+            border-radius:4px;
+        }
+        .placeholder {
+            color:var(--text-dim); font-size:14px; text-align:center;
+            position:relative; z-index:5;
+        }
+        .placeholder .big { font-size:44px; display:block; margin-bottom:10px; }
+
+        /* ═══ CONTROLES RANGO / INTERVALO ═══ */
+        .controles-chart {
+            display:flex; gap:3px; align-items:center; padding:5px 12px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+            border-bottom:1px solid rgba(255,255,255,0.1);
+            flex-wrap:wrap; position:relative; z-index:5;
+        }
+        .controles-chart .etiq-ctrl {
+            font-size:8px; color:var(--text-dim); text-transform:uppercase;
+            letter-spacing:1.2px; margin-right:3px; font-weight:800;
+        }
+        .controles-chart .sep-ctrl {
+            width:1px; height:18px; background:rgba(255,255,255,0.2); margin:0 8px;
+        }
+        .btn-rango, .btn-intervalo {
+            padding:3px 8px; font-size:9.5px; font-family:var(--font-mono);
+            font-weight:700; border:1px solid rgba(255,255,255,0.15);
+            border-radius:4px; cursor:pointer; transition:all 0.2s;
+            background:rgba(0,0,0,0.2); color:var(--text-secondary);
+        }
+        .btn-rango:hover, .btn-intervalo:hover {
+            background:rgba(0,212,255,0.12); border-color:var(--cyan); color:#fff;
+        }
+        .btn-rango.activo {
+            background:rgba(0,212,255,0.25); border-color:var(--cyan); color:var(--cyan);
+            box-shadow:0 0 10px rgba(0,212,255,0.3);
+        }
+        .btn-intervalo.activo {
+            background:rgba(176,128,255,0.25); border-color:var(--purple); color:var(--purple);
+            box-shadow:0 0 10px rgba(176,128,255,0.3);
+        }
+
+        /* ═══ PANEL PREDICCIÓN ═══ */
+        .pred { display:flex; flex-direction:column; }
+        .pred-body {
+            flex:1; padding:14px; display:flex; flex-direction:column; gap:10px;
+            overflow-y:auto; position:relative; z-index:5;
+        }
+        .pred-body::-webkit-scrollbar { width:4px; }
+        .pred-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
+
+        .tarjeta-patron {
+            text-align:center; padding:14px 10px;
+            background: rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:6px;
+        }
+        .tarjeta-patron .etiq {
+            font-size:9px; color:var(--text-dim);
+            text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;
+        }
+        .tarjeta-patron .nombre {
+            font-size:18px; font-weight:800; letter-spacing:0.5px;
+        }
+        .nombre.ok { color:var(--green); text-shadow:0 0 20px rgba(0,255,136,0.3); }
+        .nombre.no { color:var(--yellow); }
+
+        .barra-conf .top {
+            display:flex; justify-content:space-between;
+            font-size:9.5px; color:var(--text-dim);
+            text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;
+        }
+        .val-conf { font-size:20px; font-weight:800; font-family:var(--font-mono); }
+        .val-conf.alta { color:var(--green); }
+        .val-conf.media { color:var(--yellow); }
+        .val-conf.baja { color:var(--red); }
+        .barra-bg { width:100%; height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+        .barra-fill {
+            height:100%; transition:width 0.5s ease, background 0.3s;
+            border-radius:4px;
+        }
+        .barra-fill.alta { background:linear-gradient(90deg, var(--green), #00cc66); box-shadow:0 0 8px rgba(0,255,136,0.4); }
+        .barra-fill.media { background:linear-gradient(90deg, var(--yellow), #ff9900); box-shadow:0 0 8px rgba(255,200,0,0.3); }
+        .barra-fill.baja { background:linear-gradient(90deg, var(--red), #cc0033); }
+
+        .separador {
+            height:1px;
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            margin:2px 0;
+        }
+
+        .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+        .celda {
+            padding:8px 10px;
+            background:rgba(255,255,255,0.03);
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:4px;
+        }
+        .celda .l { font-size:8.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; }
+        .celda .v { font-size:15px; font-weight:700; font-family:var(--font-mono); margin-top:1px; }
+        .v.vc { color:var(--cyan); }
+        .v.vg { color:var(--green); }
+        .v.vr { color:var(--red); }
+        .v.vp { color:var(--purple); }
+
+        /* Historial */
+        .hist { flex:1; overflow-y:auto; min-height:0; }
+        .hist::-webkit-scrollbar { width:4px; }
+        .hist::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:2px; }
+        .hrow {
+            display:grid; grid-template-columns:52px 1fr 48px;
+            gap:6px; align-items:center;
+            padding:4px 10px; font-family:var(--font-mono); font-size:10px;
+            border-bottom:1px solid rgba(255,255,255,0.03);
+        }
+        .hrow:hover { background:rgba(255,255,255,0.03); }
+        .hrow .h { color:var(--text-dim); }
+        .hrow .p { color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .hrow .c { text-align:right; font-weight:700; }
+        .hrow .c.a { color:var(--green); }
+        .hrow .c.b { color:var(--text-dim); }
+
+        /* ═══ PANEL LOGS ═══ */
+        .logs { grid-column:1 / -1; display:flex; flex-direction:column; }
+        .logs-body {
+            flex:1; overflow-y:auto; padding:3px 0;
+            font-family:var(--font-mono); font-size:11px; min-height:0;
+            position:relative; z-index:5;
+        }
+        .logs-body::-webkit-scrollbar { width:4px; }
+        .logs-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+        .lrow {
+            display:grid; grid-template-columns:78px 58px 1fr;
+            gap:6px; padding:2px 12px; line-height:1.65;
+            border-bottom:1px solid rgba(255,255,255,0.015);
+        }
+        .lrow:hover { background:rgba(255,255,255,0.02); }
+        .lrow .t { color:var(--text-dim); font-size:10px; }
+        .lrow .n { font-size:10px; font-weight:700; }
+        .lrow .n.INFO { color:var(--cyan); }
+        .lrow .n.WARNING { color:var(--yellow); }
+        .lrow .n.ERROR { color:var(--red); }
+        .lrow .n.DEBUG { color:var(--text-dim); }
+        .lrow .m { color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        /* ═══ BARRA DE PROGRESO ENTRENAMIENTO ═══ */
+        .barra-entrenamiento {
+            display:none; grid-column:1/-1;
+            padding:8px 16px;
+            background: rgba(255,200,0,0.08);
+            border:1px solid rgba(255,200,0,0.3);
+            border-radius:6px;
+            font-size:11px; color:var(--yellow);
+            position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+            z-index:100; min-width:500px; max-width:80vw;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .barra-entrenamiento.visible { display:flex; flex-direction:column; gap:6px; }
+        .barra-entrenamiento .progreso-texto {
+            display:flex; justify-content:space-between; font-weight:700;
+        }
+        .barra-entrenamiento .progreso-bg {
+            width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:3px;
+        }
+        .barra-entrenamiento .progreso-fill {
+            height:100%; border-radius:3px; transition:width 0.5s;
+            background: linear-gradient(90deg, var(--yellow), var(--green));
+            box-shadow: 0 0 12px rgba(255,200,0,0.5);
+        }
+
+        .pie {
+            position:fixed; bottom:6px; right:14px; z-index:10;
+            font-size:9.5px; color:var(--text-dim); font-family:var(--font-mono);
+        }
+
+        @media (max-width:960px) {
+            .terminal { grid-template-columns:1fr; grid-template-rows:54px auto auto 180px; }
+            .stats { display:none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="fondo-aurora"></div>
+<div class="capa-cristal"></div>
+
+<div class="terminal">
+
+    <!-- ═══ BARRA SUPERIOR ═══ -->
+    <div class="barra ag">
+        <div class="logo">PATTERNDETECT<sub>v3</sub></div>
+        <div class="grupo-url">
+            <input id="inpUrl" class="inp-url"
+                   value="https://finance.yahoo.com/chart/%5EGSPC"
+                   placeholder="URL de Yahoo Finance (ej: https://finance.yahoo.com/chart/AAPL)"
+                   spellcheck="false">
+            <button id="btnIr" class="btn-ir" onclick="cambiarUrl()">ANALIZAR</button>
+        </div>
+        <button id="btnReiniciar" class="btn-reiniciar" onclick="reiniciarTodo()">🔁 REINICIAR TODO</button>
+        <div class="stats">
+            <span class="st">CAP <b class="c" id="sC">0</b></span>
+            <span class="st">PAT <b class="g" id="sP">0</b></span>
+            <span class="st">ERR <b class="r" id="sE">0</b></span>
+            <span class="st">GPU <b class="c" id="sD">cpu</b></span>
+        </div>
+    </div>
+
+    <!-- ═══ CHART ═══ -->
+    <div class="chart ag">
+        <div class="enc">
+            <span class="ic">📊</span> CHART <span id="rangoLabel">YTD</span> — <span id="simb">^GSPC</span>
+            <div class="led" id="ledChart"></div>
+        </div>
+        <div class="controles-chart">
+            <span class="etiq-ctrl">Rango:</span>
+            <button class="btn-rango activo" data-rango="1d">1D</button>
+            <button class="btn-rango" data-rango="5d">5D</button>
+            <button class="btn-rango" data-rango="1m">1M</button>
+            <button class="btn-rango" data-rango="3m">3M</button>
+            <button class="btn-rango" data-rango="6m">6M</button>
+            <button class="btn-rango" data-rango="ytd">YTD</button>
+            <button class="btn-rango" data-rango="1y">1Y</button>
+            <button class="btn-rango" data-rango="5y">5Y</button>
+            <button class="btn-rango" data-rango="max">MAX</button>
+            <div class="sep-ctrl"></div>
+            <span class="etiq-ctrl">Intervalo:</span>
+            <button class="btn-intervalo activo" data-intervalo="1m">1m</button>
+            <button class="btn-intervalo" data-intervalo="5m">5m</button>
+            <button class="btn-intervalo" data-intervalo="15m">15m</button>
+            <button class="btn-intervalo" data-intervalo="1h">1h</button>
+            <button class="btn-intervalo" data-intervalo="1d">1D</button>
+            <button class="btn-intervalo" data-intervalo="1wk">1S</button>
+        </div>
+        <div class="chart-body" id="chartBox">
+            <div class="placeholder">
+                <span class="big">📡</span>
+                Conectando con Yahoo Finance…<br>
+                <small style="color:var(--text-dim)">Primera captura ~15s</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PREDICCIÓN ═══ -->
+    <div class="pred ag">
+        <div class="enc">
+            <span class="ic">🎯</span> PREDICCIÓN DUAL DINOv2
+            <div class="led" id="ledModel"></div>
+        </div>
+        <div class="pred-body">
+            <div class="tarjeta-patron">
+                <div class="etiq">📈 Análisis Gráfico Completo</div>
+                <div class="nombre no" id="nom1">Esperando…</div>
+            </div>
+            <div class="barra-conf">
+                <div class="top">
+                    <span>Confianza Completo</span>
+                    <span class="val-conf baja" id="vc1">0.0%</span>
+                </div>
+                <div class="barra-bg"><div class="barra-fill baja" id="bf1" style="width:0%"></div></div>
+            </div>
+
+            <div class="separador"></div>
+
+            <div class="tarjeta-patron">
+                <div class="etiq">🔎 Análisis Mitad Derecha (Reciente)</div>
+                <div class="nombre no" id="nom2">Esperando…</div>
+            </div>
+            <div class="barra-conf">
+                <div class="top">
+                    <span>Confianza Mitad Derecha</span>
+                    <span class="val-conf baja" id="vc2">0.0%</span>
+                </div>
+                <div class="barra-bg"><div class="barra-fill baja" id="bf2" style="width:0%"></div></div>
+            </div>
+
+            <div class="separador"></div>
+
+            <div class="grid4">
+                <div class="celda"><div class="l">Capturas</div><div class="v vc" id="mCap">0</div></div>
+                <div class="celda"><div class="l">Patrones</div><div class="v vg" id="mPat">0</div></div>
+                <div class="celda"><div class="l">Inferencia</div><div class="v vp" id="mInf">0ms</div></div>
+                <div class="celda"><div class="l">Dispositivo</div><div class="v" id="mDev">CPU</div></div>
+            </div>
+
+            <div class="enc" style="margin:0 -14px;padding:5px 12px;">
+                <span class="ic">📋</span> HISTORIAL
+            </div>
+            <div class="hist" id="histBox">
+                <div style="padding:10px;color:var(--text-dim);font-size:10px;text-align:center;">Sin detecciones aún</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ LOGS ═══ -->
+    <div class="logs ag">
+        <div class="enc">
+            <span class="ic">🖥️</span> SYSTEM LOGS
+            <span style="margin-left:auto;font-size:8.5px;color:var(--text-dim);" id="logCnt">0</span>
+        </div>
+        <div class="logs-body" id="logBox">
+            <div class="lrow">
+                <span class="t">--:--:--</span>
+                <span class="n INFO">INFO</span>
+                <span class="m">Esperando conexión con el motor de captura…</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de progreso de entrenamiento (flotante) -->
+<div class="barra-entrenamiento" id="barraEntrenamiento">
+    <div class="progreso-texto">
+        <span id="entrenamientoMsg">Preparando…</span>
+        <span id="entrenamientoPct">0%</span>
+    </div>
+    <div class="progreso-bg">
+        <div class="progreso-fill" id="entrenamientoFill" style="width:0%"></div>
+    </div>
+</div>
+
+<div class="pie"><span id="dot">●</span> polling 2s │ GPU obligatoria</div>
+
+<script>
+const POLL = 2000;
+let lastTs = '';
+
+function clsConf(v) { return v >= 70 ? 'alta' : v >= 40 ? 'media' : 'baja'; }
+
+function setPatron(elNom, elVc, elBf, nombre, conf, valido) {
+    elNom.textContent = nombre || 'Esperando…';
+    elNom.className = 'nombre ' + (valido ? 'ok' : 'no');
+    const cl = clsConf(conf);
+    elVc.textContent = conf.toFixed(1) + '%';
+    elVc.className = 'val-conf ' + cl;
+    elBf.style.width = conf + '%';
+    elBf.className = 'barra-fill ' + cl;
+}
+
+function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+async function poll() {
+    try {
+        const r = await fetch('/api/estado');
+        if (!r.ok) throw new Error(r.status);
+        const d = await r.json();
+
+        // Entrenamiento overlay
+        const barra = document.getElementById('barraEntrenamiento');
+        const btnR = document.getElementById('btnReiniciar');
+        if (d.entrenando) {
+            barra.classList.add('visible');
+            btnR.classList.add('activo');
+            btnR.textContent = '⏳ ENTRENANDO…';
+            document.getElementById('entrenamientoMsg').textContent = d.mensaje_entrenamiento || 'Procesando…';
+            document.getElementById('entrenamientoPct').textContent = (d.progreso_entrenamiento||0).toFixed(0) + '%';
+            document.getElementById('entrenamientoFill').style.width = (d.progreso_entrenamiento||0) + '%';
+        } else {
+            barra.classList.remove('visible');
+            btnR.classList.remove('activo');
+            btnR.textContent = '🔁 REINICIAR TODO';
+        }
+
+        if (d.timestamp === lastTs && d.total_capturas > 0) return;
+        lastTs = d.timestamp;
+
+        // Chart image
+        if (d.imagen_b64) {
+            document.getElementById('chartBox').innerHTML =
+                '<img src="data:image/png;base64,' + d.imagen_b64 + '">';
+        }
+
+        // Análisis 1: Completo
+        setPatron(
+            document.getElementById('nom1'),
+            document.getElementById('vc1'),
+            document.getElementById('bf1'),
+            d.patron, d.confianza, d.es_valido
+        );
+
+        // Análisis 2: Mitad derecha
+        setPatron(
+            document.getElementById('nom2'),
+            document.getElementById('vc2'),
+            document.getElementById('bf2'),
+            d.patron_mitad || 'Esperando…',
+            d.confianza_mitad || 0,
+            d.es_valido_mitad || false
+        );
+
+        // Metrics
+        document.getElementById('mCap').textContent = d.total_capturas;
+        document.getElementById('mPat').textContent = d.total_patrones;
+        document.getElementById('mInf').textContent = (d.inferencia_ms||0).toFixed(0) + 'ms';
+        document.getElementById('mDev').textContent = d.dispositivo.toUpperCase();
+        document.getElementById('sC').textContent = d.total_capturas;
+        document.getElementById('sP').textContent = d.total_patrones;
+        document.getElementById('sE').textContent = d.total_errores;
+        document.getElementById('sD').textContent = d.dispositivo;
+
+        // LEDs
+        document.getElementById('ledChart').className = d.ejecutando ? 'led' : 'led off';
+        document.getElementById('ledModel').className = d.modelo_cargado ? 'led' : 'led off';
+
+        // Symbol
+        if (d.url_actual) {
+            const m = d.url_actual.match(/chart\/([^#?/]+)/);
+            if (m) document.getElementById('simb').textContent = decodeURIComponent(m[1]);
+        }
+
+        // History
+        if (d.historial && d.historial.length) {
+            let h = '';
+            d.historial.forEach(function(e) {
+                h += '<div class="hrow"><span class="h">'+e.hora+'</span><span class="p">'+e.patron+'</span><span class="c '+(e.confianza>=70?'a':'b')+'">'+e.confianza.toFixed(1)+'%</span></div>';
+            });
+            document.getElementById('histBox').innerHTML = h;
+        }
+
+        // Logs
+        if (d.logs && d.logs.length) {
+            let h = '';
+            d.logs.forEach(function(l) {
+                h += '<div class="lrow"><span class="t">'+l.hora+'</span><span class="n '+l.nivel+'">'+l.nivel+'</span><span class="m">'+esc(l.mensaje)+'</span></div>';
+            });
+            document.getElementById('logBox').innerHTML = h;
+            document.getElementById('logCnt').textContent = d.logs.length + ' entradas';
+        }
+
+        document.getElementById('dot').style.color = '#00ff88';
+    } catch(e) {
+        document.getElementById('dot').style.color = '#ff3860';
+    }
+}
+
+async function cambiarUrl() {
+    const inp = document.getElementById('inpUrl');
+    const btn = document.getElementById('btnIr');
+    const url = inp.value.trim();
+    if (!url) { inp.focus(); return; }
+    btn.classList.add('cargando'); btn.textContent = 'CARGANDO…';
+    try {
+        const r = await fetch('/api/cambiar-url', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({url:url})
+        });
+        const d = await r.json();
+        if (d.error) alert('Error: ' + d.error);
+    } catch(e) { alert('Error: ' + e.message); }
+    setTimeout(function(){ btn.classList.remove('cargando'); btn.textContent='ANALIZAR'; }, 3000);
+}
+
+async function reiniciarTodo() {
+    if (!confirm('¿Reiniciar TODO el sistema?\n\nEsto detendrá la captura, reentrenará el modelo en GPU y reiniciará todo.')) return;
+    const btn = document.getElementById('btnReiniciar');
+    btn.classList.add('activo');
+    btn.textContent = '⏳ INICIANDO…';
+    try {
+        const r = await fetch('/api/reiniciar', {
+            method:'POST', headers:{'Content-Type':'application/json'}
+        });
+        const d = await r.json();
+        if (d.error) { alert('Error: ' + d.error); btn.classList.remove('activo'); btn.textContent='🔁 REINICIAR TODO'; }
+    } catch(e) { alert('Error: ' + e.message); btn.classList.remove('activo'); btn.textContent='🔁 REINICIAR TODO'; }
+}
+
+document.getElementById('inpUrl').addEventListener('keydown', function(e){ if(e.key==='Enter') cambiarUrl(); });
+
+// ── Cambiar Rango ──────────────────────────────
+document.querySelectorAll('.btn-rango').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        const rango = this.dataset.rango;
+        document.querySelectorAll('.btn-rango').forEach(function(b){ b.classList.remove('activo'); });
+        this.classList.add('activo');
+        document.getElementById('rangoLabel').textContent = rango.toUpperCase();
+        fetch('/api/cambiar-rango', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({rango: rango})
+        }).catch(function(e){ console.error('Error cambiando rango:', e); });
+    });
+});
+
+// ── Cambiar Intervalo ──────────────────────────
+document.querySelectorAll('.btn-intervalo').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        const intervalo = this.dataset.intervalo;
+        document.querySelectorAll('.btn-intervalo').forEach(function(b){ b.classList.remove('activo'); });
+        this.classList.add('activo');
+        fetch('/api/cambiar-intervalo', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({intervalo: intervalo})
+        }).catch(function(e){ console.error('Error cambiando intervalo:', e); });
+    });
+});
+
+setInterval(poll, POLL);
+poll();
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Patrones - Tiempo Real</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0e17; color: #e0e0e0; }
+        .encabezado { background: linear-gradient(135deg, #1a1f2e, #0d1117); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0081f2; }
+        .encabezado h1 { color: #0081f2; font-size: 1.4em; }
+        .estado-sistema { display: flex; gap: 15px; align-items: center; }
+        .indicador { padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .indicador.activo { background: #0dbd6e33; color: #0dbd6e; border: 1px solid #0dbd6e; }
+        .indicador.inactivo { background: #ff554733; color: #ff5547; border: 1px solid #ff5547; }
+        .contenedor { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; padding: 15px; height: calc(100vh - 70px); }
+        .panel { background: #141925; border-radius: 8px; border: 1px solid #1e2638; overflow: hidden; }
+        .panel-titulo { background: #1a1f2e; padding: 10px 15px; font-size: 0.9em; color: #8899aa; border-bottom: 1px solid #1e2638; display: flex; justify-content: space-between; }
+        .panel-contenido { padding: 15px; }
+        .columna-izq { display: flex; flex-direction: column; gap: 15px; }
+        .columna-der { display: flex; flex-direction: column; gap: 15px; }
+        .imagen-chart { width: 100%; height: auto; border-radius: 4px; border: 1px solid #1e2638; background: #0d1117; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        .imagen-chart img { width: 100%; height: auto; border-radius: 4px; }
+        .deteccion-actual { text-align: center; padding: 20px; }
+        .nombre-patron { font-size: 1.8em; font-weight: bold; color: #0081f2; margin: 10px 0; }
+        .confianza { font-size: 2.5em; font-weight: bold; }
+        .confianza.alta { color: #0dbd6e; }
+        .confianza.media { color: #f0b429; }
+        .confianza.baja { color: #ff5547; }
+        .metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .metrica { text-align: center; padding: 12px; background: #0d1117; border-radius: 6px; }
+        .metrica-valor { font-size: 1.5em; font-weight: bold; color: #0081f2; }
+        .metrica-label { font-size: 0.75em; color: #667788; margin-top: 4px; }
+        .historial-tabla { width: 100%; font-size: 0.85em; }
+        .historial-tabla th { text-align: left; padding: 6px 10px; color: #667788; border-bottom: 1px solid #1e2638; }
+        .historial-tabla td { padding: 6px 10px; border-bottom: 1px solid #0d1117; }
+        .historial-scroll { max-height: calc(100vh - 400px); overflow-y: auto; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 0.8em; font-weight: bold; }
+        .badge-verde { background: #0dbd6e22; color: #0dbd6e; }
+        .badge-amarillo { background: #f0b42922; color: #f0b429; }
+        .badge-rojo { background: #ff554722; color: #ff5547; }
+        .placeholder { color: #334455; font-size: 1.2em; }
+        .barra-confianza { width: 100%; height: 8px; background: #0d1117; border-radius: 4px; margin-top: 8px; }
+        .barra-confianza-relleno { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #1e2638; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="encabezado">
+        <h1>📊 Detector de Patrones Técnicos — Tiempo Real</h1>
+        <div class="estado-sistema">
+            <span id="estado-modelo" class="indicador inactivo">Modelo: Cargando...</span>
+            <span id="estado-captura" class="indicador inactivo">Captura: Detenida</span>
+            <span id="estado-dispositivo" class="indicador inactivo">CPU</span>
+        </div>
+    </div>
+
+    <div class="contenedor">
+        <div class="columna-izq">
+            <div class="panel" style="flex: 2;">
+                <div class="panel-titulo">
+                    <span>📸 Captura Yahoo Finance — S&P 500 (^GSPC)</span>
+                    <span id="timestamp-captura">--:--:--</span>
+                </div>
+                <div class="panel-contenido">
+                    <div class="imagen-chart" id="contenedor-imagen">
+                        <span class="placeholder">Esperando primera captura...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-titulo"><span>📈 Métricas del Sistema</span></div>
+                <div class="panel-contenido">
+                    <div class="metricas">
+                        <div class="metrica">
+                            <div class="metrica-valor" id="m-capturas">0</div>
+                            <div class="metrica-label">Capturas Totales</div>
+                        </div>
+                        <div class="metrica">
+                            <div class="metrica-valor" id="m-patrones">0</div>
+                            <div class="metrica-label">Patrones Detectados</div>
+                        </div>
+                        <div class="metrica">
+                            <div class="metrica-valor" id="m-fps">0.00</div>
+                            <div class="metrica-label">FPS Promedio</div>
+                        </div>
+                        <div class="metrica">
+                            <div class="metrica-valor" id="m-dispositivo">-</div>
+                            <div class="metrica-label">Dispositivo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="columna-der">
+            <div class="panel">
+                <div class="panel-titulo"><span>🎯 Detección Actual</span></div>
+                <div class="panel-contenido deteccion-actual">
+                    <div class="nombre-patron" id="patron-actual">Esperando...</div>
+                    <div class="confianza baja" id="confianza-actual">0.0%</div>
+                    <div class="barra-confianza">
+                        <div class="barra-confianza-relleno" id="barra-confianza" style="width: 0%; background: #ff5547;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="flex: 1;">
+                <div class="panel-titulo">
+                    <span>📋 Historial de Detecciones</span>
+                    <span id="historial-count">0</span>
+                </div>
+                <div class="historial-scroll">
+                    <table class="historial-tabla">
+                        <thead><tr><th>Hora</th><th>Patrón</th><th>Confianza</th></tr></thead>
+                        <tbody id="historial-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const INTERVALO_POLLING = 2000; // ms
+
+        function obtenerClaseConfianza(valor) {
+            if (valor >= 70) return 'alta';
+            if (valor >= 40) return 'media';
+            return 'baja';
+        }
+
+        function obtenerColorConfianza(valor) {
+            if (valor >= 70) return '#0dbd6e';
+            if (valor >= 40) return '#f0b429';
+            return '#ff5547';
+        }
+
+        function obtenerBadge(valor) {
+            if (valor >= 70) return 'badge-verde';
+            if (valor >= 40) return 'badge-amarillo';
+            return 'badge-rojo';
+        }
+
+        async function actualizarEstado() {
+            try {
+                const respuesta = await fetch('/api/estado');
+                const datos = await respuesta.json();
+
+                // Imagen
+                if (datos.imagen_b64) {
+                    document.getElementById('contenedor-imagen').innerHTML =
+                        `<img src="data:image/png;base64,${datos.imagen_b64}" alt="Chart">`;
+                }
+
+                // Patrón actual
+                document.getElementById('patron-actual').textContent = datos.patron;
+                const elemConfianza = document.getElementById('confianza-actual');
+                elemConfianza.textContent = datos.confianza + '%';
+                elemConfianza.className = 'confianza ' + obtenerClaseConfianza(datos.confianza);
+
+                // Barra de confianza
+                const barra = document.getElementById('barra-confianza');
+                barra.style.width = datos.confianza + '%';
+                barra.style.background = obtenerColorConfianza(datos.confianza);
+
+                // Timestamp
+                document.getElementById('timestamp-captura').textContent = datos.timestamp || '--:--:--';
+
+                // Métricas
+                document.getElementById('m-capturas').textContent = datos.total_capturas;
+                document.getElementById('m-patrones').textContent = datos.total_patrones;
+                document.getElementById('m-fps').textContent = datos.fps;
+                document.getElementById('m-dispositivo').textContent = datos.dispositivo.toUpperCase();
+
+                // Estado sistema
+                const estadoModelo = document.getElementById('estado-modelo');
+                estadoModelo.textContent = datos.modelo_cargado ? 'Modelo: DINOv2 ✓' : 'Modelo: No cargado';
+                estadoModelo.className = 'indicador ' + (datos.modelo_cargado ? 'activo' : 'inactivo');
+
+                const estadoCaptura = document.getElementById('estado-captura');
+                estadoCaptura.textContent = datos.ejecutando ? 'Captura: Activa' : 'Captura: Detenida';
+                estadoCaptura.className = 'indicador ' + (datos.ejecutando ? 'activo' : 'inactivo');
+
+                const estadoDisp = document.getElementById('estado-dispositivo');
+                const esGPU = datos.dispositivo.includes('cuda');
+                estadoDisp.textContent = esGPU ? 'GPU CUDA ⚡' : 'CPU';
+                estadoDisp.className = 'indicador ' + (esGPU ? 'activo' : 'inactivo');
+
+                // Historial
+                const tbody = document.getElementById('historial-body');
+                tbody.innerHTML = '';
+                document.getElementById('historial-count').textContent = datos.historial.length;
+                datos.historial.forEach(item => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td>${item.hora}</td>
+                        <td>${item.patron}</td>
+                        <td><span class="badge ${obtenerBadge(item.confianza)}">${item.confianza}%</span></td>
+                    `;
+                    tbody.appendChild(fila);
+                });
+
+            } catch (error) {
+                console.error('Error actualizando estado:', error);
+            }
+        }
+
+        // Polling cada 2 segundos
+        setInterval(actualizarEstado, INTERVALO_POLLING);
+        actualizarEstado(); // Primera carga
+    </script>
+</body>
+</html>
